@@ -7,44 +7,46 @@ import argparse
 class neuron:
 
     def __init__(self):
-        self.prev_a = 0
-        self.w = 0
-        self.b = 0
+        self.w = np.random.rand()  # weight
+        self.b = np.random.rand()  # bias
+        return
+
+    def run(self, prev_a, activation_function):
+
+        self.z = self.w*prev_a + self.b  # activation
+        self.a = activation_function(self.z)  # output
+        return
+
 
 
 class layer:
      
     def __init__(self, neurons_number):
-        self.layer = []
-        self.neurons_number = neurons_number
-
-    #def construct(self, neurons_number):
-    #    self.neurons_number = neurons_number
+        self.neurons = [neuron()]*neurons_number
 
 class neural_network:
 
+    def __init__(self, input_layer, array_neuron_numbers):
 
-    def __init__(self):
+        self.input_layer = input_layer
+        self.layers = [layer(n) for n in array_neuron_numbers]
+        # layersWithInput = [input_layer]+hiddenLayers
+        # self.layers = layersWithInput
 
-        self.input_layer = []
-        self.layers = []
-        self.layers_number = 0
-        self.array_neuron_numbers = []
+    # def construct(self, layer):
 
-    def construct(self, input_layer, array_neuron_numbers):
-
-        self.layers = [layer()]*(len(array_neuron_numbers)+1)
-        #test_array = [0]*len(array_neuron_numbers)
+    #     self.layers = [layer()]*(len(array_neuron_numbers))
+    #     #test_array = [0]*len(array_neuron_numbers)
         
-        #print(self.layers)
+    #     self.layers[0].construct(input_layer)  # input layer
 
-        for i in range(len(array_neuron_numbers)):
-            self.layers[i+1].construct(array_neuron_numbers[i])
+    #     for i in range(1, len(array_neuron_numbers)):
+    #         self.layers[i+1].construct(array_neuron_numbers[i])
 
-        #for i in range(len(array_neuron_numbers)):
-        #    self.layers.append(layer(array_neuron_numbers[i]))
+    #     #for i in range(len(array_neuron_numbers)):
+    #     #    self.layers.append(layer(array_neuron_numbers[i]))
 
-    #def backpropagation(self, layer_0, layer_1):
+    # #def backpropagation(self, layer_0, layer_1):
 #
 #
 #
