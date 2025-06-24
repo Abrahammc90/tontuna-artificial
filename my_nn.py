@@ -2,6 +2,7 @@ import sys
 import math
 import numpy as np
 import argparse
+import cPickle
 #import simpy as sp
 
 class neuron:
@@ -55,6 +56,31 @@ def sigmoid(x):
         fx = 1/(1+math.e**(-x))
         return fx
 
+class MNIST_loader:
+     
+    def __init__(self, datafile):
+        f = open(datafile, 'rb')
+        self.training_data, self.validation_data, self.test_data = cPickle.load(f)
+        f.close()
+
+    def wrap(self):
+        training_inputs = [np.reshape(x, (784, 1)) for x in self.training_data[0]]
+        training_results = [self.vectorized_result(y) for y in self.training_data[1]]
+        training_data = zip(training_inputs, training_results)
+        validation_inputs = [np.reshape(x, (784, 1)) for x in self.validation_data[0]]
+        validation_data = zip(validation_inputs, self.validation_data[1])
+        test_inputs = [np.reshape(x, (784, 1)) for x in self.test_data[0]]
+        test_data = zip(test_inputs, self.test_data[1])
+        return (training_data, validation_data, test_data)
+    
+    def vectorized_result(j):
+        """Return a 10-dimensional unit vector with a 1.0 in the jth
+        position and zeroes elsewhere.  This is used to convert a digit
+        (0...9) into a corresponding desired output from the neural
+        network."""
+        e = np.zeros((10, 1))
+        e[j] = 1.0
+        return e
 
 class arguments:
     wheels = 4
