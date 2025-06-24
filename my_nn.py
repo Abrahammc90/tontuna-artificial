@@ -11,42 +11,23 @@ class neuron:
         self.b = np.random.rand()  # bias
         return
 
-    def run(self, prev_a, activation_function):
+    def update(self, prev_a, activation_function):
 
         self.z = self.w*prev_a + self.b  # activation
         self.a = activation_function(self.z)  # output
         return
 
 
-
-class layer:
-     
-    def __init__(self, neurons_number):
-        self.neurons = [neuron()]*neurons_number
-
 class neural_network:
 
     def __init__(self, input_layer, array_neuron_numbers):
 
         self.input_layer = input_layer
-        self.layers = [layer(n) for n in array_neuron_numbers]
-        # layersWithInput = [input_layer]+hiddenLayers
-        # self.layers = layersWithInput
+        self.layers = [[neuron()]*n for n in array_neuron_numbers]
 
-    # def construct(self, layer):
+        return
 
-    #     self.layers = [layer()]*(len(array_neuron_numbers))
-    #     #test_array = [0]*len(array_neuron_numbers)
-        
-    #     self.layers[0].construct(input_layer)  # input layer
-
-    #     for i in range(1, len(array_neuron_numbers)):
-    #         self.layers[i+1].construct(array_neuron_numbers[i])
-
-    #     #for i in range(len(array_neuron_numbers)):
-    #     #    self.layers.append(layer(array_neuron_numbers[i]))
-
-    # #def backpropagation(self, layer_0, layer_1):
+    #def backpropagation(self, layer_0, layer_1):
 #
 #
 #
@@ -91,28 +72,22 @@ def main():
     #args = arguments()
     #args.parse(sys.argv)
     #args = arguments()
-    arguments1 = arguments()
-    arguments2 = arguments()
-    print(arguments.wheels, arguments1.wheels, arguments2.wheels)
-    arguments1.wheels = 2
-    print(arguments.wheels, arguments1.wheels, arguments2.wheels)
-    arguments2.wheels = 3
-    print(arguments.wheels, arguments1.wheels, arguments2.wheels)
+    #arguments1 = arguments()
+    #arguments2 = arguments()
+    #print(arguments.wheels, arguments1.wheels, arguments2.wheels)
+    #arguments1.wheels = 2
+    #print(arguments.wheels, arguments1.wheels, arguments2.wheels)
+    #arguments2.wheels = 3
+    #print(arguments.wheels, arguments1.wheels, arguments2.wheels)
 
     #print(arguments.__dict__)
-    exit()
+    #exit()
 
-    args.files
-    args.num
-
-    print(sys.argv[1:])
-    exit()
-
-    input_files = sys.argv[1:]
+    #input_files = sys.argv[1:]
 
 
-    nn = neural_network()
-    nn.construct([0, 0, 0], [2, 3, 4])
+    nn = neural_network([1,2,3,4,5,6,7,8], [4, 2, 3])
+    #print(nn.layers)
 
 if __name__ == '__main__':
     main()
