@@ -2,7 +2,8 @@ import sys
 import math
 import numpy as np
 import argparse
-import cPickle
+import pickle
+import gzip
 #import simpy as sp
 
 class neuron:
@@ -57,14 +58,27 @@ def sigmoid(x):
         return fx
 
 class MNIST_loader:
-     
-    def __init__(self, datafile):
-        f = open(datafile, 'rb')
-        self.training_data, self.validation_data, self.test_data = cPickle.load(f)
+    
+    def __init__(self, dataFile):
+        #print(dataFile)
+        f = open(dataFile, 'rb')
+        self.training_data, self.validation_data, self.test_data = pickle.load(f, encoding="bytes")
+        print("\nTraining data size: ", f"[{len(self.training_data)}][{len(self.training_data[0])}]" )
+        print(self.training_data)
+        print("\nValidation data size: ", f"[{len(self.validation_data)}][{len(self.validation_data[0])}]" )
+        print(self.validation_data)
+        print("\nTest data size: ", f"[{len(self.test_data)}][{len(self.test_data[0])}]" )
+        print(self.test_data)
         f.close()
 
     def wrap(self):
         training_inputs = [np.reshape(x, (784, 1)) for x in self.training_data[0]]
+        print("\nTraining data size: ", f"[{len(training_inputs)}][{len(training_inputs[0])}]" )
+        print(training_inputs)
+        print("\nValidation data size: ", f"[{len(self.validation_data)}][{len(self.validation_data[0])}]" )
+        print(self.validation_data)
+        print("\nTest data size: ", f"[{len(self.test_data)}][{len(self.test_data[0])}]" )
+        print(self.test_data)
         training_results = [self.vectorized_result(y) for y in self.training_data[1]]
         training_data = zip(training_inputs, training_results)
         validation_inputs = [np.reshape(x, (784, 1)) for x in self.validation_data[0]]
@@ -111,7 +125,10 @@ def main():
 
     #input_files = sys.argv[1:]
 
+    pkl_file = sys.argv[1]
+    input_data = MNIST_loader(pkl_file)
 
+    exit()
     nn = neural_network([1,2,3,4,5,6,7,8], [4, 2, 3])
     #print(nn.layers)
 
