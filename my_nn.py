@@ -22,10 +22,13 @@ class neuron:
 
 class neural_network:
 
-    def __init__(self, input_layer, array_neuron_numbers):
+    def __init__(self, training_inputs, expected_results, hidden_layer_neuron_numbers):
+        """Initialize the neural network with the given training inputs"""
 
-        self.input_layer = input_layer
-        self.layers = [[neuron()]*n for n in array_neuron_numbers]
+        #add the output layer to the neuron numbers
+        total_neuron_layers = hidden_layer_neuron_numbers + [len(expected_results[0])]
+        self.input_layer = training_inputs
+        self.hidden_layers = [[neuron()]*n for n in total_neuron_layers]
 
         return
 
@@ -52,47 +55,40 @@ class neural_network:
     #        grad += self.backpropagation(neurons[i-1].a, neurons[i].w, neurons[i].b)
 
 
-
 def sigmoid(x):
         fx = 1/(1+math.e**(-x))
         return fx
 
 class MNIST_loader:
-    
+
     def __init__(self, dataFile):
-        #print(dataFile)
         f = open(dataFile, 'rb')
         self.training_data, self.validation_data, self.test_data = pickle.load(f, encoding="bytes")
-        print("\nTraining data size: ", f"[{len(self.training_data)}][{len(self.training_data[0])}]" )
-        print(self.training_data)
-        print("\nValidation data size: ", f"[{len(self.validation_data)}][{len(self.validation_data[0])}]" )
-        print(self.validation_data)
-        print("\nTest data size: ", f"[{len(self.test_data)}][{len(self.test_data[0])}]" )
-        print(self.test_data)
+        self.training_results = [self.vectorize_result(y) for y in self.training_data[1]]
         f.close()
 
-    def wrap(self):
-        training_inputs = [np.reshape(x, (784, 1)) for x in self.training_data[0]]
-        print("\nTraining data size: ", f"[{len(training_inputs)}][{len(training_inputs[0])}]" )
-        print(training_inputs)
-        print("\nValidation data size: ", f"[{len(self.validation_data)}][{len(self.validation_data[0])}]" )
-        print(self.validation_data)
-        print("\nTest data size: ", f"[{len(self.test_data)}][{len(self.test_data[0])}]" )
-        print(self.test_data)
-        training_results = [self.vectorized_result(y) for y in self.training_data[1]]
-        training_data = zip(training_inputs, training_results)
-        validation_inputs = [np.reshape(x, (784, 1)) for x in self.validation_data[0]]
-        validation_data = zip(validation_inputs, self.validation_data[1])
-        test_inputs = [np.reshape(x, (784, 1)) for x in self.test_data[0]]
-        test_data = zip(test_inputs, self.test_data[1])
-        return (training_data, validation_data, test_data)
+    # def _wrap(self):
+
+    #     print("Wrapping training data")
+    #     self.training_inputs = [np.reshape(x, 784) for x in self.training_data[0]]
+    #     self.training_results = [self.vectorize_result(y) for y in self.training_data[1]]
+    #     #training_data = zip(training_inputs, training_results)
+
+    #     print("Wrapping validation data")
+    #     self.validation_inputs = [np.reshape(x, 784) for x in self.validation_data[0]]
+    #     #validation_data = zip(validation_inputs, self.validation_data[1])
+        
+    #     print("Wrapping test data")
+    #     self.test_inputs = [np.reshape(x, 784) for x in self.test_data[0]]
+    #     #test_data = zip(test_inputs, self.test_data[1])
+    #     return #(training_data, validation_data, test_data)
     
-    def vectorized_result(j):
+    def vectorize_result(self, j):
         """Return a 10-dimensional unit vector with a 1.0 in the jth
         position and zeroes elsewhere.  This is used to convert a digit
         (0...9) into a corresponding desired output from the neural
         network."""
-        e = np.zeros((10, 1))
+        e = np.zeros(10)
         e[j] = 1.0
         return e
 
@@ -109,28 +105,14 @@ class arguments:
 
 def main():
 
-    #args = arguments()
-    #args.parse(sys.argv)
-    #args = arguments()
-    #arguments1 = arguments()
-    #arguments2 = arguments()
-    #print(arguments.wheels, arguments1.wheels, arguments2.wheels)
-    #arguments1.wheels = 2
-    #print(arguments.wheels, arguments1.wheels, arguments2.wheels)
-    #arguments2.wheels = 3
-    #print(arguments.wheels, arguments1.wheels, arguments2.wheels)
-
-    #print(arguments.__dict__)
-    #exit()
-
-    #input_files = sys.argv[1:]
-
     pkl_file = sys.argv[1]
     input_data = MNIST_loader(pkl_file)
 
-    exit()
-    nn = neural_network([1,2,3,4,5,6,7,8], [4, 2, 3])
+    nn = neural_network(input_data.training_data[0], input_data.training_results, [30, 30])
     #print(nn.layers)
+
+    
+        
 
 if __name__ == '__main__':
     main()
