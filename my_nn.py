@@ -57,7 +57,12 @@ class neural_network:
 
         return
 
-    def feedforward(self):
+    def feedforward(self, X):
+        
+        x = X[0]
+
+        for pixel, input_neuron in zip(x, self.layers[0]):
+            input_neuron.update(pixel)
 
         for i in range(len(self.layers[1:])):
             sum_a = np.sum(np.array([prev_neuron.a for prev_neuron in self.layers[i]]))
