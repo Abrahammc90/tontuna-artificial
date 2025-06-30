@@ -6,36 +6,77 @@ import pickle
 import gzip
 #import simpy as sp
 
+
+class activation_functions:
+
+    @staticmethod
+    def sigmoid(x):
+        fx = 1/(1+math.e**(-x))
+        return fx
+    
+    @staticmethod
+    def ReLU(x):
+        if x > 0:
+            return x
+        else:
+            return 0
+
 class neuron:
 
-    def __init__(self):
+    def __init__(self, activation_function):
         self.w = np.random.rand()  # weight
         self.b = np.random.rand()  # bias
+        self.activation_function = activation_function
         return
 
-    def update(self, prev_a, activation_function):
-
-        self.z = self.w*prev_a + self.b  # activation
-        self.a = activation_function(self.z)  # output
+    def update(self, prev_a):
+        #sum_prev_a = np.sum(np.array(prev_a))
+        z = self.w*prev_a + self.b  # activation
+        #sum_z = 0 # sum over all previous neurons
+        self.a = self.activation_function(z)  # output
         return
 
 
 class neural_network:
 
-    def __init__(self, training_inputs, expected_results, hidden_layer_neuron_numbers):
+    def __init__(self, training_input_data, len_hidden_layers, len_output_layer):
         """Initialize the neural network with the given training inputs"""
 
         #add the output layer to the neuron numbers
-        total_neuron_layers = hidden_layer_neuron_numbers + [len(expected_results[0])]
-        self.input_layer = training_inputs
-        self.hidden_layers = [[neuron()]*n for n in total_neuron_layers]
+        total_neuron_layers = [len(training_input_data)] + len_hidden_layers + [len_output_layer]
+        #self.input_layer = [neuron()]*len_input_layer
+        #self.output_layer = len_output_layer
+        #activation_functions = [ReLU]*len(total_neuron_layers)-1 + [sigmoid]
+        last_layer_index = len(total_neuron_layers)-1
+        self.layers = [[neuron( activation_functions.sigmoid if n == last_layer_index else activation_functions.ReLU )]*n for n in total_neuron_layers]
+
+        for pixel, input_neuron in zip(training_input_data[0], self.layers[0]):
+            input_neuron.update(pixel)
+
+        #self.layers = [[neuron(activation_functions[i])]*total_neuron_layers[i] for i in range(len(total_neuron_layers))]
 
         return
 
-    #def backpropagation(self, layer_0, layer_1):
+    def feedforward(self):
+
+        for i in range(len(self.layers[1:])):
+            sum_a = np.sum(np.array([prev_neuron.a for prev_neuron in self.layers[i]]))
+            for next_neuron in self.layers[i+1]:
+                next_neuron.update(sum_a)
+
+
+
+        
 #
 #
-#
+        #for neuron_layer1:
+        #for neuron_layer2:
+        #for neuron_layer3:
+                        
+    
+
+    #def backpropagation():
+
     #    z = w*prev_a+b
     #    a = sigmoid(z)
     #    Co = (a-y)^2
@@ -55,17 +96,18 @@ class neural_network:
     #        grad += self.backpropagation(neurons[i-1].a, neurons[i].w, neurons[i].b)
 
 
-def sigmoid(x):
-        fx = 1/(1+math.e**(-x))
-        return fx
+
 
 class MNIST_loader:
 
-    def __init__(self, dataFile):
+    @staticmethod
+    def load_file(dataFile):
         f = open(dataFile, 'rb')
-        self.training_data, self.validation_data, self.test_data = pickle.load(f, encoding="bytes")
-        self.training_results = [self.vectorize_result(y) for y in self.training_data[1]]
+        training_data, validation_data, test_data = pickle.load(f, encoding="bytes")
         f.close()
+        training_results = [MNIST_loader.vectorize_result(y) for y in training_data[1]]
+        training_dataset = [training_data[0], training_results]
+        return training_dataset
 
     # def _wrap(self):
 
@@ -83,7 +125,8 @@ class MNIST_loader:
     #     #test_data = zip(test_inputs, self.test_data[1])
     #     return #(training_data, validation_data, test_data)
     
-    def vectorize_result(self, j):
+    @staticmethod
+    def vectorize_result(j):
         """Return a 10-dimensional unit vector with a 1.0 in the jth
         position and zeroes elsewhere.  This is used to convert a digit
         (0...9) into a corresponding desired output from the neural
@@ -106,9 +149,10 @@ class arguments:
 def main():
 
     pkl_file = sys.argv[1]
-    input_data = MNIST_loader(pkl_file)
+    training_x, training_y = MNIST_loader.load_file(pkl_file)[:]
 
-    nn = neural_network(input_data.training_data[0], input_data.training_results, [30, 30])
+    nn = neural_network(len(training_x[0]), [30, 30], len(training_y[0]))
+    nn.train(training_x, training_y)
     #print(nn.layers)
 
     
