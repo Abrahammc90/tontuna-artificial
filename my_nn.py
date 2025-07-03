@@ -21,6 +21,8 @@ class activation_functions:
             return x
         else:
             return 0
+        
+        
 
     @staticmethod
     def ReLU_prima(x):
@@ -47,35 +49,67 @@ class neuron:
 
 class neural_network:
 
-    def __init__(self, len_input_layer, len_hidden_layers, len_output_layer):
+    def __init__(self, X: list[npt.NDArray[np.float64]], Y: list[npt.NDArray[np.float64]], hidden_layers_sizes):
         """Initialize the neural network with the given training inputs"""
 
         #add the output layer to the neuron numbers
-        total_neuron_layers = [len_input_layer] + len_hidden_layers + [len_output_layer]
-        #self.input_layer = [neuron()]*len_input_layer
-        #self.output_layer = len_output_layer
-        #activation_functions = [ReLU]*len(total_neuron_layers)-1 + [sigmoid]
-        self.hidden_layers = [[neuron(total_neuron_layers[i-1])]*total_neuron_layers[i] for i in range(1, len(total_neuron_layers))]
-
-        #self.layers = [[neuron(activation_functions[i])]*total_neuron_layers[i] for i in range(len(total_neuron_layers))]
+        x = X[0]
+        self.y = Y[0]
+        input_layer_size = len(x)
+        output_layer_size = len(self.y)
+        self.layer_sizes = [input_layer_size] + hidden_layers_sizes + [output_layer_size]
+        self.total_layers = len(self.layer_sizes)
+        self.W = [np.array(np.random.rand(self.layer_sizes[i], self.layer_sizes[i-1]) for i in range(1, self.total_layers))]
+        self.B = [np.array(np.random.rand(self.layer_sizes[i]) for i in range(1, self.total_layers))]
+        self.Z = [np.array(np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers))]
+        self.A = [x]
+        self.A += [np.array(np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers))]
 
         return
 
-    def feedforward(self, X ):
-        x = X[0]
+    def feedforward(self):
 
-        for neuron in self.hidden_layers[0]:
-            neuron.update(x)
+        for i in range(1, self.total_layers):
+            
+            self.Z[i] = np.dot(self.W[i], self.A[i-1]) + self.B[i]
+            self.A[i] = np.maximum(0, self.Z) #ReLU a todos los valores de Z
+        
+        self.C = (self.A - self.y)**2
 
-        for i in range(1, len(self.hidden_layers)):
-            for right_neuron in self.hidden_layers[i]:
-                right_neuron.update([left_neuron.a for left_neuron in self.hidden_layers[i-1]])
+        return
+
 
     def backpropagation(self, training_x, training_y):
         
         x = training_x[0]
         y = training_y[0]
         gradiente = []
+
+        DELTA = [np.array(np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers))]
+
+        delta = 
+
+        dCo_dleft_a = 0
+        dCo_dw = 0
+        dCo_db = 0
+
+        for right_neuron in self.output_layer:
+            for weight, left_neuron in zip(right_neuron.weights, self.hidden_layers[-1]): # pesos de la relación de la neurona derecha con todas las de la izquierda
+                #dCo_dprev_a += np.gradient(z, prev_a) * np.gradient(a, z) * np.gradient(Co, a)
+                left_a = left_neuron.a
+                dCo_dleft_a += weight * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
+                dCo_dw += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
+                dCo_db += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
+
+
+
+
+
+
+
+
+
+
         for i in range(len(self.hidden_layers)-1, 0, -1): # capas (output_layer)
             for right_neuron in self.hidden_layers[i]: # neuronas (primera output_neuron)
                 dCo_dleft_a = 0
@@ -237,12 +271,13 @@ def main():
     pkl_file = sys.argv[1]
     training_x, training_y = MNIST_loader.load_file(pkl_file)[:]
 
-    nn = neural_network(len(training_x[0]), [30, 30], len(training_y[0]))
-    nn.train(training_x, training_y)
+    nn = neural_network(training_x, training_y, [30, 30])
+    #nn.train()
     #print(nn.layers)
 
     
-        
+    
+    #self.W.append(W0)
 
 if __name__ == '__main__':
     main()
