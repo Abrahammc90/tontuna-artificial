@@ -43,7 +43,7 @@ class neuron:
         for w, prev_a in zip(self.weights, prev_activations):
             self.z += w*prev_a # activation
         self.z += self.b
-        self.a = activation_functions.ReLU(z)  # output
+        self.a = activation_functions.ReLU(self.z)  # output
         return
 
 
@@ -53,17 +53,17 @@ class neural_network:
         """Initialize the neural network with the given training inputs"""
 
         #add the output layer to the neuron numbers
-        x = X[0]
+        self.x = X[0]
         self.y = Y[0]
-        input_layer_size = len(x)
+        input_layer_size = len(self.x)
         output_layer_size = len(self.y)
         self.layer_sizes = [input_layer_size] + hidden_layers_sizes + [output_layer_size]
         self.total_layers = len(self.layer_sizes)
-        self.W = [np.array(np.random.rand(self.layer_sizes[i], self.layer_sizes[i-1]) for i in range(1, self.total_layers))]
-        self.B = [np.array(np.random.rand(self.layer_sizes[i]) for i in range(1, self.total_layers))]
-        self.Z = [np.array(np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers))]
-        self.A = [x]
-        self.A += [np.array(np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers))]
+        self.W = [np.random.rand(self.layer_sizes[i], self.layer_sizes[i-1]) for i in range(1, self.total_layers)]
+        self.B = [np.random.rand(self.layer_sizes[i]) for i in range(1, self.total_layers)]
+        self.Z = [np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers)]
+        self.A = [self.x]
+        self.A += [np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers)]
 
         return
 
@@ -79,19 +79,36 @@ class neural_network:
         return
 
 
-    def backpropagation(self, training_x, training_y):
+    def backpropagation(self):
         
-        x = training_x[0]
-        y = training_y[0]
+        # x = self.X[0]
+        # y = self.Y[0]
         gradiente = []
 
-        DELTA = [np.array(np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers))]
+        DELTA_W = [np.array(np.zeros(self.layer_sizes[i], self.layer_sizes[i-1]) for i in range(1, self.total_layers))]
+        DELTA_B = [np.array(np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers))]
+        DELTA_A = [np.array(np.zeros(self.layer_sizes[i], self.layer_sizes[i-1]) for i in range(1, self.total_layers))]
 
-        delta = 
+        #Last layer
+        aL = self.A[-1]
+        zL = self.Z[-1]
+
+        daL_dzL = (aL > 0).astype(float)
+        dCo_daL = 2*(aL-self.y)
+        last_layer_error = daL_dzL * dCo_daL
+
+        dCo_db = last_layer_error
+        dCo_dw = np.dot(self.A[-2], last_layer_error)
+
+        print(last_layer_error)
+        exit()
+
 
         dCo_dleft_a = 0
         dCo_dw = 0
         dCo_db = 0
+
+
 
         for right_neuron in self.output_layer:
             for weight, left_neuron in zip(right_neuron.weights, self.hidden_layers[-1]): # pesos de la relación de la neurona derecha con todas las de la izquierda
@@ -272,6 +289,7 @@ def main():
     training_x, training_y = MNIST_loader.load_file(pkl_file)[:]
 
     nn = neural_network(training_x, training_y, [30, 30])
+    nn.backpropagation()
     #nn.train()
     #print(nn.layers)
 
