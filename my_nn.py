@@ -90,23 +90,51 @@ class neural_network:
         DELTA_A = [np.array(np.zeros(self.layer_sizes[i], self.layer_sizes[i-1]) for i in range(1, self.total_layers))]
 
         #Last layer
-        aL = self.A[-1]
-        zL = self.Z[-1]
+        aL_1 = self.A[-1]
+        dCo_daL_1 = 2*(aL_1-self.y)
+        
+        zL_1 = self.Z[-1]
+        daL_1_dzL_1 = (zL_1 > 0).astype(float)
 
-        daL_dzL = (aL > 0).astype(float)
-        dCo_daL = 2*(aL-self.y)
-        last_layer_error = daL_dzL * dCo_daL
 
-        dCo_db = last_layer_error
-        dCo_dw = np.dot(self.A[-2], last_layer_error)
+        last_layer_error = daL_1_dzL_1 * dCo_daL_1
+
+        aL_2 = self.A[-2]
+        dzL_1_dw_1 = aL_2
+        dzL_1_db_1 = 1
+
+        dCo_db_1 = last_layer_error * dzL_1_db_1
+        dCo_dw_1 = np.dot(last_layer_error, dzL_1_dw_1)
+
+
+        #Last layer -1
+
+        
+        zL_2 = self.Z[-2]
+
+        dzL_2_dw_2 = self.A[-3]
+        dzl_2_db_2 = 1
+        daL_2_dzl_2 = (zL_2 > 0).astype(float)
+
+        
+        dzL_1_aL_2 = self.W[-1]
+
+        layer_error = np.dot(last_layer_error, dzL_1_aL_2)
+        layer_error = np.dot(layer_error, daL_2_dzl_2)
+
+        dCo_db_2 = layer_error * dzl_2_db_2
+        dCo_dw_2 = np.dot(layer_error, dzL_2_dw_2)
+
+        
+
 
         print(last_layer_error)
         exit()
 
 
         dCo_dleft_a = 0
-        dCo_dw = 0
-        dCo_db = 0
+        dCo_dw_2 = 0
+        dCo_db_1 = 0
 
 
 
@@ -115,8 +143,8 @@ class neural_network:
                 #dCo_dprev_a += np.gradient(z, prev_a) * np.gradient(a, z) * np.gradient(Co, a)
                 left_a = left_neuron.a
                 dCo_dleft_a += weight * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                dCo_dw += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                dCo_db += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
+                dCo_dw_2 += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
+                dCo_db_1 += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
 
 
 
@@ -130,28 +158,28 @@ class neural_network:
         for i in range(len(self.hidden_layers)-1, 0, -1): # capas (output_layer)
             for right_neuron in self.hidden_layers[i]: # neuronas (primera output_neuron)
                 dCo_dleft_a = 0
-                dCo_dw = 0
-                dCo_db = 0
+                dCo_dw_2 = 0
+                dCo_db_1 = 0
                 for weight, left_neuron in zip(right_neuron.weights, self.hidden_layers[i-1]): # pesos de la relación de la neurona derecha con todas las de la izquierda
                     #dCo_dprev_a += np.gradient(z, prev_a) * np.gradient(a, z) * np.gradient(Co, a)
                     left_a = left_neuron.a
                     dCo_dleft_a += weight * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                    dCo_dw += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                    dCo_db += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                gradiente += [dCo_dleft_a, dCo_dw, dCo_db]
+                    dCo_dw_2 += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
+                    dCo_db_1 += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
+                gradiente += [dCo_dleft_a, dCo_dw_2, dCo_db_1]
                 #dCo_db = np.gradient(z, b) * np.gradient(a, z) * np.gradient(Co, a)
         
         for right_neuron in self.hidden_layers[0]:
             dCo_dleft_a = 0
-            dCo_dw = 0
-            dCo_db = 0
+            dCo_dw_2 = 0
+            dCo_db_1 = 0
             for weight, pixel in zip(right_neuron.weights, x): # pesos de la relación de la neurona derecha con todas las de la izquierda
                 #dCo_dprev_a += np.gradient(z, prev_a) * np.gradient(a, z) * np.gradient(Co, a)
                 left_a = pixel
                 dCo_dleft_a += weight * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                dCo_dw += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                dCo_db += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-            gradiente += [dCo_dleft_a, dCo_dw, dCo_db]
+                dCo_dw_2 += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
+                dCo_db_1 += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
+            gradiente += [dCo_dleft_a, dCo_dw_2, dCo_db_1]
 
             #   z = w*prev_a+b
             #   a = ReLU(z)
