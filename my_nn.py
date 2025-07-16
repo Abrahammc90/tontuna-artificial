@@ -4,7 +4,7 @@ import numpy as np
 import numpy.typing as npt
 import argparse
 import pickle
-import gzip
+#import gzip
 #import simpy as sp
 
 
@@ -49,219 +49,107 @@ class neuron:
 
 class neural_network:
 
-    def __init__(self, X: list[npt.NDArray[np.float64]], Y: list[npt.NDArray[np.float64]], hidden_layers_sizes):
+    def __init__(self, input_layer_size: int, output_layer_size: int, hidden_layers_sizes):
         """Initialize the neural network with the given training inputs"""
 
         #add the output layer to the neuron numbers
-        self.x = X[0]
-        self.y = Y[0]
-        input_layer_size = len(self.x)
-        output_layer_size = len(self.y)
-        self.layer_sizes = [input_layer_size] + hidden_layers_sizes + [output_layer_size]
+        # self.x = X[0]
+        # self.y = Y[0]
+        # input_layer_size = len(self.x)
+        # output_layer_size = len(self.y)
+        self.layer_sizes = hidden_layers_sizes + [output_layer_size]
         self.total_layers = len(self.layer_sizes)
-        self.W = [np.random.rand(self.layer_sizes[i], self.layer_sizes[i-1]) for i in range(1, self.total_layers)]
-        self.B = [np.random.rand(self.layer_sizes[i]) for i in range(1, self.total_layers)]
-        self.Z = [np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers)]
-        self.A = [self.x]
-        self.A += [np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers)]
+        self.W = [np.random.rand(self.layer_sizes[0], input_layer_size)]
+        self.W += [
+            np.random.rand(self.layer_sizes[i], self.layer_sizes[i-1])
+              for i in range(1, self.total_layers)
+        ]
+        self.B = [np.random.rand(self.layer_sizes[i]) for i in range(self.total_layers)]
+        self.Z = [np.zeros(self.layer_sizes[i]) for i in range(self.total_layers)]
+        # self.A = [self.x]
+        self.A = [np.zeros(self.layer_sizes[i]) for i in range(self.total_layers)]
 
         return
 
-    def feedforward(self):
+    def feedforward(self, x, y):
+
+        self.Z[0] = np.dot(self.W[0], x) + self.B[0]
+        self.A[0] = np.maximum(0, self.Z[0])
 
         for i in range(1, self.total_layers):
             
             self.Z[i] = np.dot(self.W[i], self.A[i-1]) + self.B[i]
-            self.A[i] = np.maximum(0, self.Z) #ReLU a todos los valores de Z
+            self.A[i] = np.maximum(0, self.Z[i]) #ReLU a todos los valores de Z
         
-        self.C = (self.A - self.y)**2
+        self.C = (self.A[-1] - y)**2
 
         return
 
 
-    def backpropagation(self):
+    def backpropagation(self, x, y):
         
         # x = self.X[0]
         # y = self.Y[0]
-        gradiente = []
-
-        DELTA_W = [np.array(np.zeros(self.layer_sizes[i], self.layer_sizes[i-1]) for i in range(1, self.total_layers))]
-        DELTA_B = [np.array(np.zeros(self.layer_sizes[i]) for i in range(1, self.total_layers))]
-        DELTA_A = [np.array(np.zeros(self.layer_sizes[i], self.layer_sizes[i-1]) for i in range(1, self.total_layers))]
+        self.gradient_w = [np.zeros((self.layer_sizes[0], len(x)))]
+        self.gradient_w += [np.zeros((self.layer_sizes[i], self.layer_sizes[i-1])) for i in range(1, self.total_layers)]
+        self.gradient_b = [np.zeros((self.layer_sizes[i])) for i in range(self.total_layers)]
 
         #Last layer
-        aL_1 = self.A[-1]
-        dCo_daL_1 = 2*(aL_1-self.y)
+        aL = self.A[-1]
+        dCo_daL = 2*(aL-y)
         
-        zL_1 = self.Z[-1]
-        daL_1_dzL_1 = (zL_1 > 0).astype(float)
+        zL = self.Z[-1]
+        daL_dzL = (zL > 0).astype(float)
 
 
-        last_layer_error = daL_1_dzL_1 * dCo_daL_1
+        layer_error = daL_dzL * dCo_daL
 
-        aL_2 = self.A[-2]
-        dzL_1_dw_1 = aL_2
-        dzL_1_db_1 = 1
-
-        dCo_db_1 = last_layer_error * dzL_1_db_1
-        dCo_dw_1 = np.dot(last_layer_error, dzL_1_dw_1)
-
-
-        #Last layer -1
-
+        dzL_db = 1
+        aL_left = self.A[-2]
+        dzL_dw = np.tile(aL_left, (len(self.A[-1]), len(aL_left)))
+        dCo_db = layer_error * dzL_db
+        dCo_dw = np.dot(layer_error, dzL_dw)
         
-        zL_2 = self.Z[-2]
-
-        dzL_2_dw_2 = self.A[-3]
-        dzl_2_db_2 = 1
-        daL_2_dzl_2 = (zL_2 > 0).astype(float)
-
+        self.gradient_b[-1] = dCo_db
+        self.gradient_w[-1] = dCo_dw
         
-        dzL_1_aL_2 = self.W[-1]
-
-        layer_error = np.dot(last_layer_error, dzL_1_aL_2)
-        layer_error = np.dot(layer_error, daL_2_dzl_2)
-
-        dCo_db_2 = layer_error * dzl_2_db_2
-        dCo_dw_2 = np.dot(layer_error, dzL_2_dw_2)
-
-        
-
-
-        print(last_layer_error)
-        exit()
-
-
-        dCo_dleft_a = 0
-        dCo_dw_2 = 0
-        dCo_db_1 = 0
-
-
-
-        for right_neuron in self.output_layer:
-            for weight, left_neuron in zip(right_neuron.weights, self.hidden_layers[-1]): # pesos de la relación de la neurona derecha con todas las de la izquierda
-                #dCo_dprev_a += np.gradient(z, prev_a) * np.gradient(a, z) * np.gradient(Co, a)
-                left_a = left_neuron.a
-                dCo_dleft_a += weight * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                dCo_dw_2 += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                dCo_db_1 += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-
-
-
-
-
-
-
-
-
-
-        for i in range(len(self.hidden_layers)-1, 0, -1): # capas (output_layer)
-            for right_neuron in self.hidden_layers[i]: # neuronas (primera output_neuron)
-                dCo_dleft_a = 0
-                dCo_dw_2 = 0
-                dCo_db_1 = 0
-                for weight, left_neuron in zip(right_neuron.weights, self.hidden_layers[i-1]): # pesos de la relación de la neurona derecha con todas las de la izquierda
-                    #dCo_dprev_a += np.gradient(z, prev_a) * np.gradient(a, z) * np.gradient(Co, a)
-                    left_a = left_neuron.a
-                    dCo_dleft_a += weight * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                    dCo_dw_2 += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                    dCo_db_1 += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                gradiente += [dCo_dleft_a, dCo_dw_2, dCo_db_1]
-                #dCo_db = np.gradient(z, b) * np.gradient(a, z) * np.gradient(Co, a)
-        
-        for right_neuron in self.hidden_layers[0]:
-            dCo_dleft_a = 0
-            dCo_dw_2 = 0
-            dCo_db_1 = 0
-            for weight, pixel in zip(right_neuron.weights, x): # pesos de la relación de la neurona derecha con todas las de la izquierda
-                #dCo_dprev_a += np.gradient(z, prev_a) * np.gradient(a, z) * np.gradient(Co, a)
-                left_a = pixel
-                dCo_dleft_a += weight * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                dCo_dw_2 += left_a * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-                dCo_db_1 += 1 * activation_functions.ReLU_prima(left_a) * 2*(right_neuron.a - y)
-            gradiente += [dCo_dleft_a, dCo_dw_2, dCo_db_1]
-
-            #   z = w*prev_a+b
-            #   a = ReLU(z)
-            #   Co = (a-y)^2
-            #   
-            #   dz_dprev_a = w
-            #
-            #   dCo_dw = np.gradient(z, w) * np.gradient(a, z) * np.gradient(Co, a)
-            #   dCo_dprev_a = np.gradient(z, prev_a) * np.gradient(a, z) * np.gradient(Co, a)
-            #   dCo_db = np.gradient(z, b) * np.gradient(a, z) * np.gradient(Co, a)
-            #   return([dCo_dw, dCo_dprev_a, dCo_db])
+        for i in range(len(self.layer_sizes)-2, -1, -1):
             
+            zL = self.Z[i]
+            # Cuando i = 0 recoge el valor de píxeles de la capa input. Else, recoge las a de la capa izquierda.
+            aL_left = [ x if(i==0) else self.A[i-1]]
 
-"""
-La fórmula de backpropagation en el descenso de gradiente para redes neuronales multicapa permite calcular cómo ajustar cada peso y sesgo para minimizar el error de la red.
-Se basa en la regla de la cadena y el cálculo de derivadas parciales de la función de coste respecto a cada parámetro.
+            dzL_dw = np.tile(aL_left, (len(self.A[i]), len(aL_left)))
+            dzL_db = 1
+            daL_dzL = (zL > 0).astype(float)
 
-Fórmulas clave de backpropagation
-Supón una red con función de coste ( C ), pesos ( w ), sesgos ( b ), activaciones ( a ), entradas ponderadas ( z ), y función de activación ( \sigma ).
+            dzL_right_daL = self.W[i+1]
 
-1. Error en la capa de salida
-[ \delta^L = \nabla_a C \odot \sigma'(z^L) ]
+            layer_error = np.dot(layer_error, dzL_right_daL)
+            layer_error = layer_error * daL_dzL
 
-( \delta^L ): error en la capa de salida
-( \nabla_a C ): derivada del coste respecto a la activación de salida
-( \odot ): producto elemento a elemento
-( \sigma'(z^L) ): derivada de la función de activación evaluada en la entrada ponderada de la capa de salida
-2. Error en capas anteriores (propagación hacia atrás)
-[ \delta^l = ((w^{l+1})^T \delta^{l+1}) \odot \sigma'(z^l) ]
+            dCo_db = layer_error * dzL_db
+            dCo_dw = np.dot(layer_error, dzL_dw)
 
-( \delta^l ): error en la capa ( l )
-( w^{l+1} ): matriz de pesos de la capa siguiente
-( \delta^{l+1} ): error de la capa siguiente
-( \sigma'(z^l) ): derivada de la activación en la capa actual
-3. Gradientes para actualizar pesos y sesgos
-[ \frac{\partial C}{\partial b^l_j} = \delta^l_j ] [ \frac{\partial C}{\partial w^l_{jk}} = a^{l-1}_k \cdot \delta^l_j ]
-
-El gradiente respecto al sesgo es el error de la neurona.
-El gradiente respecto al peso es la activación de la neurona anterior multiplicada por el error de la neurona actual.
-Resumen del algoritmo
-Feedforward: Calcula todas las activaciones y entradas ponderadas ( z ).
-Backpropagation:
-Calcula el error en la capa de salida (( \delta^L )).
-Propaga el error hacia atrás usando la fórmula recursiva para ( \delta^l ).
-Calcula los gradientes para cada peso y sesgo.
-Actualiza pesos y sesgos:
-Resta una fracción del gradiente (multiplicada por la tasa de aprendizaje) a cada peso y sesgo.
-"""
+            self.gradient_b[i] = dCo_db
+            self.gradient_w[i] = dCo_dw
 
 
 
-        
-#
-#
-        #for neuron_layer1:
-        #for neuron_layer2:
-        #for neuron_layer3:
-                        
-    
+    def learn(self, learn_rate):
+        for i in range(1, len(self.layer_sizes)):
+            self.W[i] = self.W[i] - learn_rate*self.gradient_w[i]
+            self.B[i] = self.B[i] - learn_rate*self.gradient_b[i]
 
-    #def backpropagation():
+    def train(self, X, Y, learn_rate):
 
-    #    z = w*prev_a+b
-    #    a = sigmoid(z)
-    #    Co = (a-y)^2
-#
-#
-#
-    #    dCo_dw = np.gradient(z, w) * np.gradient(a, z) * np.gradient(Co, a)
-    #    dCo_dprev_a = np.gradient(z, prev_a) * np.gradient(a, z) * np.gradient(Co, a)
-    #    dCo_db = np.gradient(z, b) * np.gradient(a, z) * np.gradient(Co, a)
-#
-    #    return([dCo_dw, dCo_dprev_a, dCo_db])
-#
-    #def gradient(self, neurons):
-#
-    #    grad = []
-    #    for i in neurons:
-    #        grad += self.backpropagation(neurons[i-1].a, neurons[i].w, neurons[i].b)
-
-
-
+        x = X[0]
+        y = Y[0]
+        # for x, y in zip(X, Y):
+        for i in range(1000):
+            self.feedforward(x, y)
+            self.backpropagation(x, y)
+            self.learn(learn_rate)
 
 class MNIST_loader:
 
@@ -314,10 +202,14 @@ class arguments:
 def main():
 
     pkl_file = sys.argv[1]
+    learn_rate = float(sys.argv[2])
     training_x, training_y = MNIST_loader.load_file(pkl_file)[:]
 
-    nn = neural_network(training_x, training_y, [30, 30])
-    nn.backpropagation()
+
+    input_layer_size = len(training_x[0])
+    output_layer_size = len(training_y[0])
+    nn = neural_network(input_layer_size, output_layer_size, [30, 30])
+    nn.train(training_x, training_y, learn_rate)
     #nn.train()
     #print(nn.layers)
 
