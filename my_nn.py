@@ -12,8 +12,12 @@ class activation_functions:
 
     @staticmethod
     def sigmoid(x):
-        fx = 1/(1+math.e**(-x))
-        return fx
+        return 1 / (1 + np.exp(-x))
+    
+    @staticmethod
+    def sigmoid_prime(x):
+        s = activation_functions.sigmoid(x)
+        return s * (1 - s)
     
     @staticmethod
     def ReLU(x):
@@ -76,12 +80,16 @@ class neural_network:
         self.Z[0] = np.dot(self.W[0], x) + self.B[0]
         self.A[0] = np.maximum(0, self.Z[0])
 
-        for i in range(1, self.total_layers):
+        for i in range(1, self.total_layers-1):
             
             self.Z[i] = np.dot(self.W[i], self.A[i-1]) + self.B[i]
             self.A[i] = np.maximum(0, self.Z[i]) #ReLU a todos los valores de Z
         
+        self.Z[-1] = np.dot(self.W[-1], self.A[-2]) + self.B[-1]
+        self.A[-1] = activation_functions.sigmoid(self.Z[-1])
+
         self.C = (self.A[-1] - y)**2
+        
 
         return
 
@@ -99,14 +107,14 @@ class neural_network:
         dCo_daL = 2*(aL-y)
         
         zL = self.Z[-1]
-        daL_dzL = (zL > 0).astype(float)
+        daL_dzL = activation_functions.sigmoid(zL)
 
 
         layer_error = daL_dzL * dCo_daL
 
         dzL_db = 1
         aL_left = self.A[-2]
-        dzL_dw = np.tile(aL_left, (len(self.A[-1]), len(aL_left)))
+        dzL_dw = np.tile(aL_left, (len(self.A[-1]), 1))
         dCo_db = layer_error * dzL_db
         dCo_dw = np.dot(layer_error, dzL_dw)
         
@@ -133,6 +141,7 @@ class neural_network:
 
             self.gradient_b[i] = dCo_db
             self.gradient_w[i] = dCo_dw
+        
 
 
 
@@ -143,10 +152,10 @@ class neural_network:
 
     def train(self, X, Y, learn_rate):
 
-        x = X[0]
-        y = Y[0]
-        # for x, y in zip(X, Y):
-        for i in range(1000):
+        #x = X[0]
+        #y = Y[0]
+        for x, y in zip(X, Y):
+        #for i in range(1000):
             self.feedforward(x, y)
             self.backpropagation(x, y)
             self.learn(learn_rate)
@@ -210,6 +219,7 @@ def main():
     output_layer_size = len(training_y[0])
     nn = neural_network(input_layer_size, output_layer_size, [30, 30])
     nn.train(training_x, training_y, learn_rate)
+    print('toecho')
     #nn.train()
     #print(nn.layers)
 
