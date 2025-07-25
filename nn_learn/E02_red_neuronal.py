@@ -90,14 +90,19 @@ class Network:
             activations.append(activation)
         # Propagación hacia atrás
         delta = self.cost_derivative(activations[-1], y) * self.sigmoid_prime(zs[-1])
+        print(delta)
+        exit()
+        print(self.cost_derivative(activations[-1], y).shape)
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
+        print(delta.shape, activations[-2].shape, "shape")
         for l in range(2, self.num_layers):
             z = zs[-l]
             sp = self.sigmoid_prime(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+        exit()
         return (nabla_b, nabla_w)
 
     def sigmoid_prime(self, z):
