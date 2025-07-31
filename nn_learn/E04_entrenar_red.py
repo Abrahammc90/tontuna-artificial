@@ -11,10 +11,11 @@ Puedes ejecutar este archivo para entrenar tu red y ver los resultados.
 """
 
 import numpy as np
-from E02_red_neuronal import Network
+from nn_copiloto import Network
 import pickle
 import gzip
 import os
+import sys
 
 def vectorized_result(j):
     e = np.zeros((10, 1))
@@ -22,22 +23,9 @@ def vectorized_result(j):
     return e
 
 # Cargar los datos igual que antes
-input_dir = os.path.join(os.path.dirname(__file__), '..', 'input-files')
-data_file = None
-for fname in ['mnist.pkl', 'mnist.pkl.gz']:
-    path = os.path.join(input_dir, fname)
-    if os.path.exists(path):
-        data_file = path
-        break
-if data_file is None:
-    raise FileNotFoundError('No se encontró mnist.pkl ni mnist.pkl.gz en input-files')
-
-if data_file.endswith('.gz'):
-    with gzip.open(data_file, 'rb') as f:
-        training_data, validation_data, test_data = pickle.load(f, encoding='latin1')
-else:
-    with open(data_file, 'rb') as f:
-        training_data, validation_data, test_data = pickle.load(f, encoding='latin1')
+data_file = sys.argv[1]
+with open(data_file, 'rb') as f:
+    training_data, validation_data, test_data = pickle.load(f, encoding='latin1')
 
 training_inputs = [np.reshape(x, (784, 1)) for x in training_data[0]]
 training_results = [vectorized_result(y) for y in training_data[1]]
