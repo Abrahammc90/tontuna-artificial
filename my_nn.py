@@ -63,12 +63,12 @@ class neural_network:
         # output_layer_size = len(self.y)
         self.layer_sizes = hidden_layers_sizes + [output_layer_size]
         self.total_layers = len(self.layer_sizes)
-        self.W = [np.random.rand(self.layer_sizes[0], input_layer_size)]
+        self.W = [np.random.randn(self.layer_sizes[0], input_layer_size)]
         self.W += [
-            np.random.rand(self.layer_sizes[i], self.layer_sizes[i-1])
+            np.random.randn(self.layer_sizes[i], self.layer_sizes[i-1])
               for i in range(1, self.total_layers)
         ]
-        self.B = [np.random.rand(self.layer_sizes[i], 1) for i in range(self.total_layers)]
+        self.B = [np.random.randn(self.layer_sizes[i], 1) for i in range(self.total_layers)]
         self.Z = [np.zeros(self.layer_sizes[i]) for i in range(self.total_layers)]
         # self.A = [self.x]
         self.A = [np.zeros(self.layer_sizes[i]) for i in range(self.total_layers)]
@@ -77,12 +77,14 @@ class neural_network:
     def feedforward(self, x, y):
 
         self.Z[0] = np.dot(self.W[0], x) + self.B[0]
-        self.A[0] = np.maximum(0, self.Z[0])
+        #self.A[0] = np.maximum(0, self.Z[0])
+        self.A[0] = activation_functions.sigmoid(self.Z[0])
 
         for i in range(1, self.total_layers-1):
             
             self.Z[i] = np.dot(self.W[i], self.A[i-1]) + self.B[i]
-            self.A[i] = np.maximum(0, self.Z[i]) #ReLU a todos los valores de Z
+            #self.A[i] = np.maximum(0, self.Z[i]) #ReLU a todos los valores de Z
+            self.A[i] = activation_functions.sigmoid(self.Z[i])
             
         
         self.Z[-1] = np.dot(self.W[-1], self.A[-2]) + self.B[-1]
@@ -96,36 +98,7 @@ class neural_network:
         else:
             return 0
 
-    def backprop(self, x, y):
-        """
-        Retropropagación: calcula el gradiente de la función de coste respecto a pesos y sesgos.
-        """
-        
-        nabla_b = [np.zeros(b.shape) for b in self.B]
-        nabla_w = [np.zeros(w.shape) for w in self.W]
-        print(nabla_w[0].shape)
-        exit()
-        # Propagación hacia adelante
-        activation = x
-        activations = [x] # lista para guardar todas las activaciones capa por capa
-        zs = [] # lista para guardar todos los vectores z capa por capa
-        for b, w in zip(self.B, self.W):
-            z = np.dot(w, activation) + b
-            zs.append(z)
-            activation = activation_functions.sigmoid(z)
-            activations.append(activation)
-        # Propagación hacia atrás
-        delta = 2*(activations[-1], y) * activation_functions.sigmoid_prime(zs[-1])
-        nabla_b[-1] = delta
-        nabla_w[-1] = np.dot(delta, activations[-2].transpose())
-        for l in range(1, self.total_layers):
-            z = zs[-l]
-            sp = activation_functions.sigmoid_prime(z)
-            delta = np.dot(self.W[-l+1].transpose(), delta) * sp
-            nabla_b[-l] = delta
-            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
-        return (nabla_b, nabla_w)
-
+    
     def backpropagation(self, x, y):
         
         # x = self.X[0]
@@ -167,7 +140,7 @@ class neural_network:
             dzL_dw = np.tile(aL_left, (len(self.A[i]), len(aL_left)))
             
             dzL_db = 1
-            daL_dzL = (zL > 0).astype(float)
+            daL_dzL = activation_functions.sigmoid_prime(zL)
 
             dzL_right_daL = self.W[i+1]
 
@@ -222,10 +195,10 @@ class neural_network:
                 total_correct += local_correct
                 local_total_samples += len(X_batch)
                 total_samples += len(X_batch)
-                #print(f"Epoch {epoch+1} - Mini-batch: {total_samples}/{data_size} - Aciertos: {local_correct}/{local_total_samples} ({(local_correct/local_total_samples)*100:.2f}%)")
-                if test_x is not None and test_y is not None:
-                    test_correct, test_total = self.evaluate(test_x, test_y)
-                    print(f"Test: {test_correct}/{test_total} aciertos ({(test_correct/test_total)*100:.2f}%)")
+                print(f"Epoch {epoch+1} - Mini-batch: {total_samples}/{data_size} - Aciertos: {local_correct}/{local_total_samples} ({(local_correct/local_total_samples)*100:.2f}%)")
+                #if test_x is not None and test_y is not None:
+                #    test_correct, test_total = self.evaluate(test_x, test_y)
+                #    print(f"Test: {test_correct}/{test_total} aciertos ({(test_correct/test_total)*100:.2f}%)")
             print(f"Epoch {epoch+1} completada. Aciertos totales: {total_correct}/{data_size} ({(total_correct/data_size)*100:.2f}%)")
 
     
