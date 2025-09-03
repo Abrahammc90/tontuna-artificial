@@ -1,4 +1,3 @@
-from html import parser
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow logging
 
@@ -52,15 +51,15 @@ x_test = x_test.reshape(-1, 28*28).astype('float32') / 255.0
 
 
 input_a = keras.Input(shape=(int(28*28/2),))
-x = layers.Dense(256, activation='relu', name="x1")(input_a)
+x1_1 = layers.Dense(256, activation='relu', name="x1")(input_a)
 
 input_b = keras.Input(shape=(int(28*28/2),))
-y = layers.Dense(256, activation='relu', name="y1")(input_b)
+x1_2 = layers.Dense(256, activation='relu', name="y1")(input_b)
 
-combine = layers.concatenate([x, y], axis=1)
-z = layers.Dense(256, activation='relu', name='z1')(combine)
+x1 = layers.concatenate([x1_1, x1_2], axis=1)
+x2 = layers.Dense(256, activation='relu', name='z1')(x1)
 
-outputs = layers.Dense(10, activation='softmax')(z)
+outputs = layers.Dense(10, activation='softmax')(x2)
 
 model = keras.Model(inputs=[input_a, input_b], outputs=outputs)
 
